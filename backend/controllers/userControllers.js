@@ -48,9 +48,59 @@ exports.login = [loginLimiter, async (req, res) => {
     }
 }];
 
+//=========================================================================
+
+exports.registerAdmin = async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        // Ensure only an admin can create another admin
+        if (req.user.role !== "admin") {
+            return res.status(403).json({ success: false, message: "Only admins can create another admin." });
+        }
+
+        // Check if an admin with the same email already exists
+        const existingAdmin = await Users.findOne({ email });
+        if (existingAdmin) {
+            return res.status(400).json({ success: false, message: "Admin with this email already exists." });
+        }
+
+        // Create a new admin user
+        const newAdmin = new Users({ username, email, password, role: "admin" });
+        await newAdmin.save();
+
+        res.status(201).json({ success: true, message: "Admin registered successfully." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};
 
 
+//===============================================================================
 
+exports.deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // Ensure only admins can delete users
+        if (req.user.role !== "admin") {
+            return res.status(403).json({ success: false, message: "Only admins can delete users." });
+        }
+
+        // Find and delete the user
+        const deletedUser = await Users.findByIdAndDelete(userId);
+        if (!deletedUser) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        res.status(200).json({ success: true, message: "User deleted successfully." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};
+
+
+//===============================================================================================
 
 
 
