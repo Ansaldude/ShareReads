@@ -1,6 +1,15 @@
 const Users = require("../models/userModels");
-
+const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
+
+
+
+// Rate limiter to prevent brute-force attacks on login
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per window
+    message: "Too many failed login attempts. Please try again after 15 minutes."
+});
 
 //function for adding trip
 exports.adduser = (req, res) => {
@@ -18,15 +27,15 @@ exports.adduser = (req, res) => {
 
 // Using the old hardcoded JWT secret
 
-exports.login = async (req, res) => {
+exports.login = [loginLimiter, async (req, res) => {
     try {
         const user = await Users.checkCrediantialsDb(req.body.username, req.body.password);
 
         if (!user) {
-            return res.json({ success: false });
+            return res.status(401).json({ success: false, message: "Invalid username or password." });
         }
 
-        const token = await user.generateAuthToken(); // Restore original token generation method
+        const token = await user.generateAuthToken();
 
         res.json({
             token: token,
@@ -34,9 +43,16 @@ exports.login = async (req, res) => {
             user: user
         });
     } catch (e) {
-        res.status(400).send();
+        console.error("Login error:", e);
+        res.status(500).send({ success: false, message: "Internal server error." });
     }
-};
+}];
+
+
+
+
+
+
 
 exports.logincheck = async (req, res) => {
     res.send(req.user);
