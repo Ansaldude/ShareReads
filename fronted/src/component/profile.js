@@ -59,14 +59,24 @@ class Editprofilepage extends React.Component {
             newPassword: this.state.newPassword // Send new password for updating
         };
 
-        axios.put(`http://localhost:3000/updates/${this.state.id}`, data)
-            .then(() => {
+        axios.put(`http://localhost:3000/updates/${this.state.id}`, {
+            firstname: this.state.firstname,
+            lastname: this.state.lastname,
+            username: this.state.username,
+            email: this.state.email,
+            currentPassword: this.state.currentPassword,
+            newPassword: this.state.newPassword
+        }, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } // ✅ Sends token via header
+        })
+            .then(response => {
                 alert("Successfully updated");
                 window.location.reload();
             })
             .catch(error => {
-                alert(error.response.data.message || "Error updating profile");
+                alert(error.response?.data?.message || "Error updating profile");
             });
+
     };
 
     handlechange = (e) => {
