@@ -19,6 +19,14 @@ const paymentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    cardNumber: {  // ✅ Encrypted Card Number Field
+        type: String,
+        required: true
+    },
+    cvv: {  // ✅ Encrypted CVV Field
+        type: String,
+        required: true
+    },
     paymentStatus: {
         type: String,
         default: 'Pending'
