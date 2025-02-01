@@ -52,6 +52,26 @@ const multer = require('multer');
 const cors = require('cors');
 const cookieParser = require('cookie-parser'); // ✅ Added for handling cookies
 
+const helmet = require("helmet");
+
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'"], // Adjust if using external scripts
+                styleSrc: ["'self'", "'unsafe-inline'"], // Adjust if needed
+            },
+        },
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+        xssFilter: true, // ✅ Protects against XSS attacks
+        noSniff: true, // ✅ Prevents MIME-type sniffing
+        frameguard: { action: "deny" }, // ✅ Prevents Clickjacking
+    })
+);
+
+
+
 const publicdirectory = path.join(__dirname, 'public');
 
 app.use(cors({
