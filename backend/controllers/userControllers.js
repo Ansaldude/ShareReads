@@ -215,16 +215,32 @@ exports.update = async (req, res) => {
 
 
 
-exports.logout = (req, res) => {
-    res.clearCookie("token", {
-        httpOnly: true,
-        secure: false, // Set to true in production (HTTPS)
-        sameSite: "strict",
-        expires: new Date(0) // ✅ Forces immediate expiration
-    });
+exports.logout = async (req, res) => {
+    try {
+        const token = req.cookies.token; // ✅ Read the token from HTTP-only cookie
 
-    res.json({ success: true, message: "Logged out successfully." });
+        if (!token) {
+            return res.status(400).json({ success: false, message: "No token found." });
+        }
+
+        // ✅ Verify the token (but no need to remove it from DB, as login does not store it)
+        jwt.verify(token, 'thisismynewcourse');
+
+        // ✅ Clear the HTTP-only cookie
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: false, // Set to true in production (HTTPS)
+            sameSite: "strict",
+            expires: new Date(0)
+        });
+
+        res.json({ success: true, message: "Logged out successfully." });
+    } catch (error) {
+        console.error("❌ Logout error:", error);
+        res.status(500).json({ success: false, message: "Failed to log out." });
+    }
 };
+
 
 
 

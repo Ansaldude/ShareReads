@@ -32,15 +32,20 @@ class Header extends React.Component {
     }
 
     LogOut = () => {
-        axios.post('http://localhost:3000/logout')
+        axios.post('http://localhost:3000/logout', {}, { withCredentials: true }) // ✅ Ensures cookies are cleared
             .then(() => {
+                // ✅ Remove token & role from localStorage
                 localStorage.removeItem('token');
-                window.location.href = '/login'; // Redirect to login or home after logout
+                localStorage.removeItem('role');
+
+                // ✅ Redirect user to login page after logout
+                window.location.href = '/login';
             })
             .catch(error => {
                 console.error('Error logging out:', error);
             });
-    }
+    };
+
 
     render() {
         const { user, id } = this.state;
