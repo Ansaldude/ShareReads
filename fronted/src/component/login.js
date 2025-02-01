@@ -14,7 +14,7 @@ class Login extends React.Component {
             password: '',
             role: '',
             isLoggedIn: false,
-           usernameerror: '',
+            usernameerror: '',
             passworderror: ''
         }
     }
@@ -33,14 +33,14 @@ class Login extends React.Component {
 
         };
 
-    
-        
-        
+
+
+
         if (this.state.username === '') {
             isError = true;
             errors.usernameerror = "Please provide username";
-          }
-      
+        }
+
         if (this.state.password.length < 8) {
             isError = true;
             errors.passworderror = "Password must be atleast 8 character";
@@ -57,7 +57,7 @@ class Login extends React.Component {
         e.preventDefault();
         const err = this.setError();
         if (!err) {
-            axios.post('http://localhost:3000/login', this.state)
+            axios.post('http://localhost:3000/login', this.state, { withCredentials: true })
                 .then((response) => {
                     console.log(response.data)
                     localStorage.setItem('token', response.data.token)
@@ -76,45 +76,45 @@ class Login extends React.Component {
         } if (this.state.isLoggedIn === true && localStorage.getItem('role') == "admin") {
             return <Navigate to='/addadmin' />
         }
-      
+
         return (
             <div>
-                     <Nav/>
-                     <Header />
-            <div className="login-container">
-              <div className="login-content">
-                <div className="wrapper">
-                  <form >
-                    <h1>Login</h1>
-                    <div className="input-box">
-                    <input type='username' class="form-control input" placeholder="Username" name='username' id='username' value={this.state.username} onChange={this.handleChange} />
-                                      <error className="errormsg">
-                                          {this.state.usernameerror}
-                                      </error>
-                      <i className='bx bxs-user'></i>
+                <Nav />
+                <Header />
+                <div className="login-container">
+                    <div className="login-content">
+                        <div className="wrapper">
+                            <form >
+                                <h1>Login</h1>
+                                <div className="input-box">
+                                    <input type='username' class="form-control input" placeholder="Username" name='username' id='username' value={this.state.username} onChange={this.handleChange} />
+                                    <error className="errormsg">
+                                        {this.state.usernameerror}
+                                    </error>
+                                    <i className='bx bxs-user'></i>
+                                </div>
+                                <div className="input-box">
+                                    <input type='password' class="form-control input" placeholder="Password" name='password' id='password' value={this.state.password} onChange={this.handleChange} />
+                                    <error className="errormsg">
+                                        {this.state.passworderror}
+                                    </error>
+
+                                    <i className='bx bxs-lock-alt'></i>
+                                </div>
+                                <div className="remember-forgot">
+                                    <label><input type="checkbox" /> Remember Me</label>
+                                    <a href="/">Forgot Password</a>
+                                </div>
+                                <button type="submit" onClick={this.submitForm} className="btn">Login</button>
+                                <div className="register-link">
+                                    <p>Don't have an account? <a href="/signup">Register</a></p>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    <div className="input-box">
-                    <input type='password' class="form-control input" placeholder="Password" name='password' id='password' value={this.state.password} onChange={this.handleChange} />
-                                      <error className="errormsg">
-                                          {this.state.passworderror}
-                                      </error>
-                                     
-                      <i className='bx bxs-lock-alt'></i>
-                    </div>
-                    <div className="remember-forgot">
-                      <label><input type="checkbox" /> Remember Me</label>
-                      <a href="/">Forgot Password</a>
-                    </div>
-                    <button type="submit"  onClick={this.submitForm} className="btn">Login</button>
-                    <div className="register-link">
-                      <p>Don't have an account? <a href="/signup">Register</a></p>
-                    </div>
-                  </form>
                 </div>
-              </div>
+                <Footer />
             </div>
-            <Footer/>
-          </div>
 
 
         )

@@ -27,7 +27,7 @@ exports.adduser = (req, res) => {
 
 // Using the old hardcoded JWT secret
 
-exports.login = [loginLimiter, async (req, res) => {
+exports.login = async (req, res) => {
     try {
         const user = await Users.checkCrediantialsDb(req.body.username, req.body.password);
 
@@ -35,18 +35,27 @@ exports.login = [loginLimiter, async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid username or password." });
         }
 
+        // Generate JWT token
         const token = await user.generateAuthToken();
 
-        res.json({
-            token: token,
-            success: true,
-            user: user
+        // ✅ Store token in HTTP-only cookie
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: false, // Set to true in production with HTTPS
+            sameSite: "strict", // Prevent CSRF
+            maxAge: 24 * 60 * 60 * 1000 // 1 day expiry
         });
+
+        // ✅ ALSO return token in JSON for frontend compatibility
+        res.json({ success: true, message: "Login successful", token: token, user: { role: user.role } });
     } catch (e) {
         console.error("Login error:", e);
         res.status(500).send({ success: false, message: "Internal server error." });
     }
-}];
+};
+
+
+
 
 //=========================================================================
 
@@ -207,11 +216,17 @@ exports.update = async (req, res) => {
 
 
 exports.logout = (req, res) => {
-    req.user.deleteToken(req.token, (err, user) => {
-        if (err) return res.status(400).send(err);
-        res.sendStatus(200)
-    })
-}
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: false, // Set to true in production (HTTPS)
+        sameSite: "strict",
+        expires: new Date(0) // ✅ Forces immediate expiration
+    });
+
+    res.json({ success: true, message: "Logged out successfully." });
+};
+
+
 
 
 exports.admin = function (req, res) {
