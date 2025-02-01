@@ -50,6 +50,14 @@ const path = require("path");
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const cors = require('cors');
+const corsOptions = {
+    origin: "http://localhost:3001", // ✅ Allows frontend requests
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Disposition"]
+};
+
 const cookieParser = require('cookie-parser'); // ✅ Added for handling cookies
 
 const helmet = require("helmet");
@@ -59,25 +67,40 @@ app.use(
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "'unsafe-inline'"], // Adjust if using external scripts
-                styleSrc: ["'self'", "'unsafe-inline'"], // Adjust if needed
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "http://localhost:3000", "http://localhost:3000/uploads"], // ✅ Added localhost:3000
+                frameAncestors: ["'self'"],
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: [],
             },
         },
-        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-        xssFilter: true, // ✅ Protects against XSS attacks
-        noSniff: true, // ✅ Prevents MIME-type sniffing
-        frameguard: { action: "deny" }, // ✅ Prevents Clickjacking
     })
 );
+
+
+
 
 
 
 const publicdirectory = path.join(__dirname, 'public');
 
 app.use(cors({
-    origin: "http://localhost:3001", // ✅ Allow frontend to access backend
-    credentials: true, // ✅ Allow cookies to be sent
+    origin: "http://localhost:3001",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Disposition"],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 }));
+
+app.use((req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin"); // ✅ Allows image requests
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin"); // Keeps security intact
+    next();
+});
+
+
+app.use(cors(corsOptions));
 
 
 app.use(cookieParser()); // ✅ Added to parse cookies
