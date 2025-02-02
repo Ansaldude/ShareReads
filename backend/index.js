@@ -60,6 +60,22 @@ const corsOptions = {
 
 const cookieParser = require('cookie-parser'); // ✅ Added for handling cookies
 
+
+const mongoSanitize = require('express-mongo-sanitize');
+
+// ✅ Prevent NoSQL injection by sanitizing inputs
+app.use(mongoSanitize());
+
+// ✅ Optional: Log requests containing forbidden characters
+app.use((req, res, next) => {
+    if (req.body && JSON.stringify(req.body).includes("$")) {
+        console.warn("⚠️ Possible NoSQL Injection Attempt Detected!");
+    }
+    next();
+});
+
+
+
 const helmet = require("helmet");
 
 app.use(

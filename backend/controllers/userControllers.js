@@ -6,36 +6,55 @@ const jwt = require("jsonwebtoken");
 
 // Rate limiter to prevent brute-force attacks on login
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 login attempts per window
-    message: "Too many failed login attempts. Please try again after 15 minutes."
+    windowMs: 15 * 60 * 1000, // ⏳ 15 minutes lockout period
+    max: 5, // ❌ Block login after 5 failed attempts
+    message: "Too many failed login attempts. Please try again after 15 minutes.",
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
-//function for adding trip
+const sanitize = (input) => input.replace(/[$.]/g, ""); // ✅ Remove `$` and `.` to prevent injection
+
 exports.adduser = (req, res) => {
-    const User = new Users(
-        req.body)
-    User.save().then(function () {
-        res.send("User has been added")
-    }).catch(function (e) {
-        res.send(e)
-    })
-}
+    const sanitizedUser = {
+        firstname: sanitize(req.body.firstname),
+        lastname: sanitize(req.body.lastname),
+        username: sanitize(req.body.username),
+        email: sanitize(req.body.email),
+        password: req.body.password, // ✅ Password will be hashed later
+        role: req.body.role === "admin" ? "admin" : "buyer"
+    };
+
+    const User = new Users(sanitizedUser);
+    User.save().then(() => {
+        res.send("User has been added");
+    }).catch((e) => {
+        res.send(e);
+    });
+};
 
 
 
 
-// Using the old hardcoded JWT secret
 
-exports.login = async (req, res) => {
+
+
+exports.login = [loginLimiter, async (req, res) => {
     try {
-        const user = await Users.checkCrediantialsDb(req.body.username, req.body.password);
+        const username = req.body.username?.toString().trim(); // ✅ Ensure it's a string
+        const password = req.body.password?.toString().trim();
+
+        if (!username || !password) {
+            return res.status(400).json({ error: "Username and password are required." });
+        }
+
+        const user = await Users.checkCrediantialsDb(username, password);
 
         if (!user) {
             return res.status(401).json({ success: false, message: "Invalid username or password." });
         }
 
-        // Generate JWT token
+        // ✅ Generate JWT token
         const token = await user.generateAuthToken();
 
         // ✅ Store token in HTTP-only cookie
@@ -46,13 +65,13 @@ exports.login = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000 // 1 day expiry
         });
 
-        // ✅ ALSO return token in JSON for frontend compatibility
         res.json({ success: true, message: "Login successful", token: token, user: { role: user.role } });
     } catch (e) {
         console.error("Login error:", e);
         res.status(500).send({ success: false, message: "Internal server error." });
     }
-};
+}];
+
 
 
 
